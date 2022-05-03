@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         // Create an empty model
         GRBModel master = GRBModel(env);
 
-        // Pattern list implement class pattern
+        // Pattern list
         // the first index define the pattern:k-th,
         // the second that has size N define how many time items i-th is selected in one pattern (for bin packing it will be only 1,0 array)
         vector<vector<double>> pattern_list;
@@ -80,30 +80,28 @@ int main(int argc, char *argv[])
         // use update to force the model to use the defined constraint and variables
         // GUROBI IS LAZY !!!
         master.update();
+        // ONLY FOR DEBUG
         //master.write("master.lp");
-
-        int check = 0;
         // do the LP and the column generation
         while (true)
         {
             GRBModel relaxed_model = master.relax();
             relaxed_model.optimize();
             // get the dual variables values
-            // pi = [c.Pi for c in relax.getConstrs()]
-            GRBConstr *relaxed_constraints = relaxed_model.getConstrs();
+            GRBConstr* relaxed_constraints = relaxed_model.getConstrs();
             vector<double> dual_variables;
             for (int i = 0; i < relaxed_model.get(GRB_IntAttr_NumConstrs); ++i)
             {
                 dual_variables.push_back(relaxed_constraints[i].get(GRB_DoubleAttr_Pi));
             }
+            delete relaxed_constraints;
             // defining the pricing model
             GRBModel pricing = GRBModel(env);
             // varaibles set-up
             vector<GRBVar> y;
             for (int i = 0; i < instance.getNumberOfItems(); i++)
             {
-                GRBVar el = pricing.addVar(0.0, 1.0, 0.0, GRB_BINARY, "y_" + to_string(i));
-                y.push_back(el);
+                y.push_back(pricing.addVar(0.0, 1.0, 0.0, GRB_BINARY, "y_" + to_string(i)));
             }
             // forcing the variable to be set inside the model
             pricing.update();
@@ -115,61 +113,52 @@ int main(int argc, char *argv[])
                 expr += instance.getItemsWeight()[i] * y[i];
             }
             constraints_p.push_back(pricing.addConstr(expr <= instance.getBinCapacity(), "width_constraint"));
-            // objective function
+            // define the objective function for the pricing problem
             GRBLinExpr obj_function_price = 0;
             for (int i = 0; i < instance.getNumberOfItems(); i++)
             {
                 obj_function_price += y[i] * dual_variables[i];
             }
             pricing.setObjective(obj_function_price, GRB_MAXIMIZE);
+            // Force the update of the pricing problem
             pricing.update();
+            // Optimize the pricing problem
             pricing.optimize();
-            //cout << "OBJECTIVE PRICING VALUE\t" << pricing.getObjective().getValue() << endl;
             if (pricing.getObjective().getValue() < 1.0+ MY_EPS)
             {
-                cout << "CHECK=" + to_string(check) << endl;
+                // In the case we reached the end of the pricing problem
+                // exit and go back to the master
                 break;
             }
             GRBVar *vars = pricing.getVars();
             // the y are the values of the new pattern
-            // now i create the new pattern and add it to the msater problem
+            // now i create the new pattern and add it to the master problem
             vector<double> new_pattern;
             for (int i = 0; i < instance.getNumberOfItems(); i++)
             {
                 new_pattern.push_back(ceil(vars[i].get(GRB_DoubleAttr_X)));
             }
-            // output used just to debug
-            // for(int k=0;k<new_pattern.size();k++){
-            //     cout << to_string(k)+"_"+to_string(new_pattern[k])+"\t"<<endl;
-            // }
+            delete vars;
             pattern_list.push_back(new_pattern);
             new_pattern.clear(); // just to be sure to not do stupid stuff with pointers
-            // intedx of the last pattern added
+            // index of the last pattern added
             int k_index = pattern_list.size() - 1;
             GRBColumn col = GRBColumn();
             for (int i = 0; i < instance.getNumberOfItems(); i++)
             {
-                // need to understand why use if
+                // Add tye constraint only if the variable was selected
                 if (pattern_list[k_index][i] > 0)
                 {
                     col.addTerm(pattern_list[k_index][i], constraints[i]);
                 }
             }
-            // ERROR ?? 
-            // add the new variable related to the last column added
-            x[k_index] = master.addVar(0.0, 1.0, 1.0, GRB_BINARY, col, "x_p_" + to_string(k_index));
+            // add the new variable related to the last column added, to the list of the master problem variables
+            x.push_back(master.addVar(0.0, 1.0, 1.0, GRB_BINARY, col, "x_p_" + to_string(k_index)));
+            //update the master problem
             master.update();
-            // update the check conter to test if all the code works
-            check++;
-            cout << "CHECK=" + to_string(check) << endl;
-            //ambiente.end
         }
-
-        // Do the interg part of the master with the new columns
+        // Solve the master Problem
         master.optimize();
-        //master.write("new_master_" + to_string(check) + ".lp");
-        x.clear();
-        pattern_list.clear();
     }
     catch (GRBException e)
     {

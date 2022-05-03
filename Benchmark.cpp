@@ -22,7 +22,6 @@ string Benchmark::summary()
 
 void Benchmark::extractAttributesFromPath(string path)
 {
-    // example data N1C1W1_A.BPP read data_format to know what to do
     char x = path[path.size() - 11];
     char y = path[path.size() - 9];
 
