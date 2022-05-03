@@ -56,8 +56,7 @@ int main(int argc, char *argv[])
         vector<GRBVar> x;
         for (int k = 0; k < pattern_list.size(); k++)
         {
-            GRBVar el = master.addVar(0.0, 1.0, 0.0, GRB_BINARY, "x_" + to_string(k));
-            x.push_back(el);
+            x.push_back(master.addVar(0.0, 1.0, 0.0, GRB_BINARY, "x_" + to_string(k)));
         }
         vector<GRBConstr> constraints;
         for (int i = 0; i < instance.getNumberOfItems(); i++)
@@ -81,7 +80,7 @@ int main(int argc, char *argv[])
         // use update to force the model to use the defined constraint and variables
         // GUROBI IS LAZY !!!
         master.update();
-        master.write("master.lp");
+        //master.write("master.lp");
 
         int check = 0;
         // do the LP and the column generation
@@ -156,17 +155,21 @@ int main(int argc, char *argv[])
                     col.addTerm(pattern_list[k_index][i], constraints[i]);
                 }
             }
+            // ERROR ?? 
             // add the new variable related to the last column added
             x[k_index] = master.addVar(0.0, 1.0, 1.0, GRB_BINARY, col, "x_p_" + to_string(k_index));
             master.update();
             // update the check conter to test if all the code works
             check++;
             cout << "CHECK=" + to_string(check) << endl;
+            //ambiente.end
         }
 
         // Do the interg part of the master with the new columns
         master.optimize();
         //master.write("new_master_" + to_string(check) + ".lp");
+        x.clear();
+        pattern_list.clear();
     }
     catch (GRBException e)
     {
