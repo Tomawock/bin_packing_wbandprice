@@ -18,5 +18,8 @@ public:
     Benchmark();
     void loadWeightBppExtension(string path);
     string summary();
+    int getBinCapacity();
+    int getNumberOfItems();
+    vector<int> getItemsWeight();
 };
 #endif

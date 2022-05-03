@@ -29,6 +29,8 @@
   ],
   "C_Cpp.errorSquiggles": "Enabled",
   "files.associations": {
-    "iostream": "cpp"
+    "iostream": "cpp",
+    "ostream": "cpp",
+    "*.tcc": "cpp"
   }
 }

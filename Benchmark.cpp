@@ -4,16 +4,18 @@
 
 #include "Benchmark.h"
 
-Benchmark::Benchmark(){
-
+Benchmark::Benchmark()
+{
 }
 
-string Benchmark::summary(){
-    string out= "";
-    out+= "BIN CAPACITY="+to_string(this->bin_capacity)+"\n";
-    out+= "NUM ITEMS="+to_string(this->n_items)+"\n";
-    for(int i=0; i<this->items_weight.size();i++){
-        out+="W_"+to_string(items_weight[i])+"\t";
+string Benchmark::summary()
+{
+    string out = "";
+    out += "BIN CAPACITY=" + to_string(this->bin_capacity) + "\n";
+    out += "NUM ITEMS=" + to_string(this->n_items) + "\n";
+    for (int i = 0; i < this->items_weight.size(); i++)
+    {
+        out += "W_"+to_string(i)+"_"+ to_string(items_weight[i]) + "\t";
     }
     return out;
 }
@@ -27,32 +29,32 @@ void Benchmark::extractAttributesFromPath(string path)
     switch (x)
     {
     case '1':
-        this->n_items=50;
+        this->n_items = 50;
         break;
     case '2':
-        this->n_items=100;
+        this->n_items = 100;
         break;
     case '3':
-        this->n_items=200;
+        this->n_items = 200;
         break;
     case '4':
-        this->n_items=500;
+        this->n_items = 500;
         break;
     default:
         cerr << "Unable to obtain the corret NUMBER OF ITEMS\n";
         cerr << x;
     }
 
-     switch (y)
+    switch (y)
     {
     case '1':
-        this->bin_capacity=100;
+        this->bin_capacity = 100;
         break;
     case '2':
-        this->bin_capacity=120;
+        this->bin_capacity = 120;
         break;
     case '3':
-        this->bin_capacity=150;
+        this->bin_capacity = 150;
         break;
     default:
         cerr << "Unable to obtain the corret BIN CAPACITY\n";
@@ -74,9 +76,14 @@ void Benchmark::loadWeightBppExtension(string path)
             this->items_weight.push_back(stoi(line));
         }
         myfile.close();
+        this->items_weight.erase(items_weight.begin(),items_weight.begin()+2);
     }
     else
     {
         cerr << "Unable to open file\n";
     }
 };
+
+int Benchmark::getBinCapacity() { return this->bin_capacity; }
+int Benchmark::getNumberOfItems() { return this->n_items; }
+vector<int> Benchmark::getItemsWeight() { return this->items_weight; }
