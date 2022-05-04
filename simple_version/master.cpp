@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
             // get the dual variables values
             GRBConstr* relaxed_constraints = relaxed_model.getConstrs();
             vector<double> dual_variables;
-            for (int i = 0; i < relaxed_model.get(GRB_IntAttr_NumConstrs); ++i)
+            for (int i = 0; i < relaxed_model.get(GRB_IntAttr_NumConstrs); i++)
             {
                 dual_variables.push_back(relaxed_constraints[i].get(GRB_DoubleAttr_Pi));
             }
