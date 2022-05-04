@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 {
     Benchmark instance;
 
-    instance.loadWeightBppExtension("../data/N1C1W1_A.BPP");
+    instance.loadWeightBppExtension("../../data/N1C1W1_A.BPP");
     // cout << instance.summary();
     try
     {
