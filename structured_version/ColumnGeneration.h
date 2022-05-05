@@ -9,15 +9,25 @@ class ColumnGeneration
 public:
     double time_taken = -1.0;
     double lb=0.0;
+
     Prob *prob = nullptr;
     GRBEnv *env = nullptr;
     GRBModel *cg_model = nullptr;
+    GRBModel *master=nullptr;
+    std::vector<std::vector<Item*>> pattern_list;
 
     ColumnGeneration();
+    ColumnGeneration(Prob* prob);
     ~ColumnGeneration();
-    void init(GRBModel* master,GRBEnv* env,Prob* prob);
+    void feasableStart();
+    void createMaster();
+    void createPricing();
+    void update();
+    void showPatterns();
+    //set up the variables 
+    void init();
+    // do all the algorithm
     double getLB();
-    void update(GRBModel* master,GRBEnv* env,Prob* prob,std::vector<std::vector<double>> &pattern_list);
     bool price();
 };
 #endif
